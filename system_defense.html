@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM DEFENSE // V4.1 BALANCED</title>
+    <title>SYSTEM DEFENSE // V4.2 SCORING UPDATE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
@@ -85,11 +85,12 @@
 
         /* EMP BAR */
         .emp-container {
-            width: 200px; margin-top: 10px;
-            display: flex; flex-direction: column; align-items: center;
+            width: 200px;
+            display: flex; flex-direction: column; align-items: flex-start; /* Aligné à gauche */
         }
         .emp-bar-frame {
             width: 100%; height: 10px; border: 1px solid var(--term-blue); padding: 2px;
+            background: rgba(0,0,0,0.5);
         }
         .emp-fill {
             width: 0%; height: 100%; background-color: var(--term-blue);
@@ -102,6 +103,11 @@
             position: absolute; top: 30%; left: 50%; transform: translateX(-50%);
             font-size: 3rem; font-weight: bold; opacity: 0; transition: opacity 0.5s;
             text-shadow: 0 0 20px currentColor; z-index: 18; text-align: center; width: 100%;
+        }
+
+        /* Bottom HUD Container */
+        .hud-bottom {
+            display: flex; justify-content: space-between; align-items: flex-end; width: 100%;
         }
 
         .integrity-bar-container {
@@ -179,6 +185,7 @@
     <div id="ui-layer">
         <div id="bonus-msg">SYSTEM FREEZE</div>
 
+        <!-- TOP HUD: Stats & Combo -->
         <div class="hud-top">
             <!-- Left Stats -->
             <div class="stat-block">
@@ -186,18 +193,11 @@
                 <span class="value" id="score">0</span>
             </div>
             
-            <!-- Center Combo & EMP -->
+            <!-- Center Combo -->
             <div style="display:flex; flex-direction:column; align-items:center;">
                 <div class="combo-box" id="combo-display">
                     <span class="label">COMBO</span><br>
                     <span class="value" id="combo-val">x1</span>
-                </div>
-                
-                <div class="emp-container">
-                    <div class="emp-label">EMP CHARGE (SPACE)</div>
-                    <div class="emp-bar-frame">
-                        <div id="emp-bar" class="emp-fill"></div>
-                    </div>
                 </div>
             </div>
 
@@ -208,10 +208,22 @@
             </div>
         </div>
 
-        <div style="align-self: flex-end; color: var(--term-red); text-shadow: 0 0 5px red;">
-            SYSTEM INTEGRITY
-            <div class="integrity-bar-container">
-                <div id="integrity" class="integrity-fill"></div>
+        <!-- BOTTOM HUD: EMP & Integrity -->
+        <div class="hud-bottom">
+            <!-- EMP Bottom Left -->
+            <div class="emp-container">
+                <div class="emp-label">EMP CHARGE (SPACE)</div>
+                <div class="emp-bar-frame">
+                    <div id="emp-bar" class="emp-fill"></div>
+                </div>
+            </div>
+
+            <!-- Integrity Bottom Right -->
+            <div style="color: var(--term-red); text-shadow: 0 0 5px red; text-align: right;">
+                SYSTEM INTEGRITY
+                <div class="integrity-bar-container">
+                    <div id="integrity" class="integrity-fill"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -220,7 +232,7 @@
     <div id="start-screen" class="screen">
         <h1>SYSTEM DEFENSE</h1>
         <p>
-            V4.1 UPDATE<br>
+            V4.2 UPDATE<br>
             Protégez le noyau contre l'intrusion massive.
         </p>
 
@@ -710,7 +722,7 @@
                 const word = activeWords[i];
                 if (!word.isBoss) {
                     spawnExplosion(word.x+50, word.y, '#fff', 10);
-                    score += 1;
+                    score += word.text.length; // Modified scoring
                     activeWords.splice(i, 1);
                 } else {
                     // Damage boss
@@ -851,7 +863,7 @@
                             if (word.type === 'FREEZE') { freezeTimer = 3000; body.classList.add('frozen'); Sounds.freeze(); showBonusMessage("SYSTEM FREEZE", "#00f3ff"); }
                             else if (word.type === 'HEAL') { integrity = Math.min(100, integrity + 15); Sounds.heal(); showBonusMessage("REPAIR +15%", "#ffd700"); }
                             
-                            score += (1 + Math.floor(combo / 5));
+                            score += (word.text.length + Math.floor(combo / 5)); // Modified scoring
                             combo++;
                             empCharge = Math.min(100, empCharge + 5); // Charge EMP
 
@@ -883,7 +895,8 @@
                         // Instant kill single letter
                         Sounds.explosion(); spawnExplosion(activeWords[bestIdx].x, activeWords[bestIdx].y, activeWords[bestIdx].color);
                         activeWords.splice(bestIdx, 1); lockedWordIndex = -1;
-                        score++; combo++; empCharge = Math.min(100, empCharge + 5);
+                        score += 1; // Single letter is 1 point
+                        combo++; empCharge = Math.min(100, empCharge + 5);
                         increaseDifficulty(); updateHUD();
                     }
                 } else {
